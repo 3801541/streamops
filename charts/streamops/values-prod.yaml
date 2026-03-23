@@ -20,3 +20,6 @@ ingress:
     - secretName: streamops-tls
       hosts:
         - streamops.io
+
+image:
+  tag: "main-d6abca0"

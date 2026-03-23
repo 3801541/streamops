@@ -1,6 +1,5 @@
 name: CI/CD — StreamOps
 
-
 on:
   push:
     branches: [main, staging]
@@ -92,8 +91,6 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.image_uri }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # ─── Job 3 : Update Helm values → ArgoCD déploie automatiquement ────────────
   deploy:

@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 terraform {
   required_version = ">= 1.7"
 
@@ -12,7 +14,7 @@ terraform {
   # backend "s3" {
   #   bucket = "streamops-tfstate"
   #   key    = "prod/terraform.tfstate"
-  #   region = "eu-west-3"
+  #   region = "eu-west-1"
   # }
 }
 
@@ -34,7 +36,7 @@ module "vpc" {
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
 
   enable_nat_gateway   = true
-  single_nat_gateway   = true   # coût réduit hors prod
+  single_nat_gateway   = true
   enable_dns_hostnames = true
 
   # Tags requis par EKS pour la découverte automatique des subnets
@@ -78,6 +80,23 @@ module "eks" {
   }
 
   tags = local.common_tags
+}
+
+resource "aws_eks_access_entry" "stephane" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/stephane"
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "stephane_admin" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = aws_eks_access_entry.stephane.principal_arn
+
+  policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"  # droits admin complets
+
+  access_scope {
+    type = "cluster"
+  }
 }
 
 # ─── ECR ───────────────────────────────────────────────────────────────────────

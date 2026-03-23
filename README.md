@@ -1,6 +1,6 @@
 # StreamOps 🎬
 
-> Mini-projet DevOps simulant le cycle de vie d'une plateforme de streaming (style TF1+).  
+> Mini-projet DevOps simulant le cycle de vie d'une plateforme de streaming.  
 > Stack : **FastAPI · Docker · GitHub Actions · Terraform · Helm · ArgoCD · EKS · Prometheus · Grafana**
 
 ---
@@ -142,8 +142,6 @@ terraform apply
 ```
 
 Les ressources créées : VPC · subnets privés/publics · NAT Gateway · EKS cluster · ECR · RDS PostgreSQL.
-
-> **Note :** Le code Terraform est complet et validable avec `terraform validate` sans compte AWS.
 
 ---
 

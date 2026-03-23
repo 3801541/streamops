@@ -1,5 +1,6 @@
 name: CI/CD — StreamOps
 
+
 on:
   push:
     branches: [main, staging]
@@ -135,8 +136,8 @@ jobs:
 
       - name: Commit & push updated values
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "3801541"
+          git config user.email "nsitang1@gmail.com"
           git add ${{ env.HELM_CHART_PATH }}/${{ steps.env.outputs.values_file }}
           git commit -m "chore(${{ steps.env.outputs.environment }}): bump image to ${{ needs.build-push.outputs.image_tag }} [skip ci]"
           git push

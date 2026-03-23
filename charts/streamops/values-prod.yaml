@@ -22,4 +22,4 @@ ingress:
         - streamops.io
 
 image:
-  tag: "main-2a36bde"
+  tag: "main-04417e0"

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars        # contient les secrets (db_password, etc.)
+!terraform.tfvars.example
+
+# Docker
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

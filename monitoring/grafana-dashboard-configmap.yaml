@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-streamops
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  streamops.json: |
+    {
+      "title": "StreamOps — Overview",
+      "uid": "streamops-overview",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Requests per second",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(streamops_requests_total[1m])) by (endpoint)",
+            "legendFormat": "{{ endpoint }}"
+          }]
+        },
+        {
+          "id": 2,
+          "title": "P95 Latency (s)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum(rate(streamops_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "P95 {{ endpoint }}"
+          }]
+        },
+        {
+          "id": 3,
+          "title": "Error rate (%)",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "sum(rate(streamops_requests_total{status=~'5..'}[5m])) / sum(rate(streamops_requests_total[5m])) * 100"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+        },
+        {
+          "id": 4,
+          "title": "Active streams served (total)",
+          "type": "stat",
+          "gridPos": { "x": 6, "y": 8, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "sum(streamops_active_streams_total)"
+          }]
+        },
+        {
+          "id": 5,
+          "title": "Pod CPU usage",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace='streamops'}[2m])) by (pod)",
+            "legendFormat": "{{ pod }}"
+          }]
+        },
+        {
+          "id": 6,
+          "title": "Pod memory usage (MB)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(container_memory_usage_bytes{namespace='streamops'}) by (pod) / 1024 / 1024",
+            "legendFormat": "{{ pod }}"
+          }]
+        }
+      ]
+    }

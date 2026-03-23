@@ -1,0 +1,144 @@
+# Surcharge de kube-prometheus-stack pour StreamOps
+# Doc complète : https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+
+# ─── Prometheus ────────────────────────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    retentionSize: "8GB"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+    # Scrape les pods annotés prometheus.io/scrape: "true"
+    additionalScrapeConfigs:
+      - job_name: streamops-pods
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [streamops]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port,
+                            __address__]
+            action: replace
+            regex: (\d+);([^:]+)(?::\d+)?
+            replacement: $2:$1
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+    # Règles d'alerte custom
+    additionalPrometheusRulesMap:
+      streamops-rules:
+        groups:
+          - name: streamops.alerts
+            rules:
+              - alert: HighRequestLatency
+                expr: histogram_quantile(0.95, rate(streamops_request_duration_seconds_bucket[5m])) > 0.5
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Latence P95 élevée ({{ $value }}s)"
+                  description: "Le pod {{ $labels.pod }} dépasse 500ms au P95."
+
+              - alert: PodCrashLooping
+                expr: rate(kube_pod_container_status_restarts_total{namespace="streamops"}[15m]) > 0
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Pod en crash loop"
+                  description: "{{ $labels.pod }} redémarre en boucle."
+
+              - alert: HighCPUUsage
+                expr: rate(container_cpu_usage_seconds_total{namespace="streamops"}[5m]) > 0.8
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "CPU élevé sur {{ $labels.pod }}"
+
+# ─── Grafana ───────────────────────────────────────────────────────────────────
+grafana:
+  enabled: true
+  adminPassword: "changeme"   # à injecter via Secret en prod
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+  # Dashboard custom StreamOps provisionné automatiquement
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: streamops
+          orgId: 1
+          folder: StreamOps
+          type: file
+          disableDeletion: true
+          options:
+            path: /var/lib/grafana/dashboards/streamops
+
+  dashboardsConfigMaps:
+    streamops: "grafana-dashboard-streamops"
+
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s/grafana"
+      serve_from_sub_path: true
+
+# ─── Alertmanager ──────────────────────────────────────────────────────────────
+alertmanager:
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ["alertname", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: "slack-default"
+      routes:
+        - matchers:
+            - severity = critical
+          receiver: "slack-critical"
+    receivers:
+      - name: "slack-default"
+        slack_configs:
+          - api_url: "https://hooks.slack.com/services/XXX/YYY/ZZZ"  # à remplacer
+            channel: "#alerts-staging"
+            title: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+            text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+      - name: "slack-critical"
+        slack_configs:
+          - api_url: "https://hooks.slack.com/services/XXX/YYY/ZZZ"  # à remplacer
+            channel: "#alerts-critical"
+            title: ":fire: [CRITICAL] {{ .CommonLabels.alertname }}"
+            text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+
+# ─── Node Exporter & kube-state-metrics ───────────────────────────────────────
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true

@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: streamops
+  namespace: argocd
+  # Auto-suppression si le manifest est supprimé du repo
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/<YOUR_USERNAME>/streamops  # à adapter
+    targetRevision: HEAD
+    path: charts/streamops
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml   # surcharge prod par défaut
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: streamops
+
+  syncPolicy:
+    automated:
+      prune: true      # supprime les ressources obsolètes
+      selfHeal: true   # re-synchronise si divergence manuelle
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 2m

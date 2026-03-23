@@ -1,0 +1,7 @@
+# Copier ce fichier en terraform.tfvars et remplir les valeurs
+# IMPORTANT : ne jamais committer terraform.tfvars (contient des secrets)
+
+aws_region   = "eu-west-3"
+project_name = "streamops"
+environment  = "staging"
+db_password  = "CHANGE_ME"   # utiliser AWS Secrets Manager en prod

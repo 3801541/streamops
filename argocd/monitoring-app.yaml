@@ -23,7 +23,7 @@ spec:
       helm:
         valueFiles:
           - $values/monitoring/values.yaml
-    - repoURL: https://github.com/<YOUR_USERNAME>/streamops  # à adapter
+    - repoURL: https://github.com/3801541/streamops
       targetRevision: HEAD
       ref: values
 

@@ -1,9 +1,7 @@
-# Valeurs par défaut — surchargées par values-staging.yaml et values-prod.yaml
-
 replicaCount: 2
 
 image:
-  repository: ""   # rempli par CI/CD : <account_id>.dkr.ecr.eu-west-3.amazonaws.com/streamops
+  repository: ""   # rempli par CI/CD : <account_id>.dkr.ecr.eu-west-1.amazonaws.com/streamops
   tag: "latest"
   pullPolicy: IfNotPresent
 

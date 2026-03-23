@@ -1,6 +1,3 @@
-# Surcharge de kube-prometheus-stack pour StreamOps
-# Doc complète : https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-
 # ─── Prometheus ────────────────────────────────────────────────────────────────
 prometheus:
   prometheusSpec:

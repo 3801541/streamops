@@ -10,7 +10,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/<YOUR_USERNAME>/streamops  # à adapter
+    repoURL: https://github.com/3801541/streamops
     targetRevision: HEAD
     path: charts/streamops
     helm:
